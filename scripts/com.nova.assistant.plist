@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<!--
+  com.nova.assistant.plist
+  ─────────────────────────────────────────────────────────────────────────
+  This file tells macOS to start Nova automatically when you log in.
+  
+  HOW TO INSTALL:
+  
+  1. Edit the paths below to match YOUR system:
+     - Replace /Users/YOUR_USERNAME with your actual home directory
+     - Replace /Users/YOUR_USERNAME/nova with where you put the nova folder
+  
+  2. Copy this file to launchd's LaunchAgents directory:
+       cp com.nova.assistant.plist ~/Library/LaunchAgents/
+  
+  3. Load it (start it now AND enable auto-start):
+       launchctl load ~/Library/LaunchAgents/com.nova.assistant.plist
+  
+  4. To stop it:
+       launchctl unload ~/Library/LaunchAgents/com.nova.assistant.plist
+  
+  5. To check if it's running:
+       launchctl list | grep nova
+  
+  LOGS:
+  Nova's startup logs go to ~/Library/Logs/nova.log
+  ─────────────────────────────────────────────────────────────────────────
+-->
+
+<plist version="1.0">
+<dict>
+    <!-- Unique identifier for this service -->
+    <key>Label</key>
+    <string>com.nova.assistant</string>
+
+    <!-- The program to run + arguments -->
+    <key>ProgramArguments</key>
+    <array>
+        <!-- Path to Python in your virtual environment -->
+        <string>/Users/YOUR_USERNAME/nova/.venv/bin/python</string>
+        <!-- Path to Nova's main.py -->
+        <string>/Users/YOUR_USERNAME/nova/main.py</string>
+    </array>
+
+    <!-- Working directory (where Nova looks for config/) -->
+    <key>WorkingDirectory</key>
+    <string>/Users/YOUR_USERNAME/nova</string>
+
+    <!-- Start on login -->
+    <key>RunAtLoad</key>
+    <true/>
+
+    <!-- Restart if Nova crashes -->
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Wait 5 seconds before restarting after a crash -->
+    <key>ThrottleInterval</key>
+    <integer>5</integer>
+
+    <!-- Log stdout and stderr -->
+    <key>StandardOutPath</key>
+    <string>/Users/YOUR_USERNAME/Library/Logs/nova.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/YOUR_USERNAME/Library/Logs/nova_error.log</string>
+
+    <!-- Environment variables -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+</dict>
+</plist>

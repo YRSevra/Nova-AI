@@ -1,0 +1,36 @@
+# Nova AI Assistant — Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# ── Wake word detection ──────────────────────────────────────────────────────
+pvporcupine==3.0.2           # Picovoice Porcupine wake word engine
+pyaudio==0.2.14              # Microphone audio stream
+
+# ── Speech-to-Text ───────────────────────────────────────────────────────────
+    # OpenAI Whisper (runs locally, no API calls)
+sounddevice==0.4.6           # Alternative audio recording
+scipy==1.11.4                # Audio processing utilities
+numpy==1.26.2
+
+# ── AI Brain ─────────────────────────────────────────────────────────────────
+openai==1.3.8                # OpenAI API client (GPT-4o)
+
+# ── Text-to-Speech ───────────────────────────────────────────────────────────
+# Option A: macOS built-in (no API key needed, works offline)
+# Uses subprocess + macOS `say` command — no extra package needed
+
+# Option B: ElevenLabs (better voice quality, needs API key)
+elevenlabs            # Uncomment if you want ElevenLabs TTS
+
+# ── Memory / Database ────────────────────────────────────────────────────────
+# sqlite3 is built into Python — no install needed
+
+# ── Configuration ────────────────────────────────────────────────────────────
+pyyaml==6.0.1                # Load config.yaml
+
+# ── Browser Automation (Phase 2) ─────────────────────────────────────────────
+playwright==1.40.0           # Browser control (run: playwright install)
+
+# ── Utilities ────────────────────────────────────────────────────────────────
+python-dotenv==1.0.0         # Load .env files as fallback
+requests==2.31.0             # HTTP requests
+rich==13.7.0                 # Pretty terminal output / logging

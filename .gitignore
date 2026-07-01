@@ -1,0 +1,29 @@
+# Nova — Git Ignore
+# ─────────────────────────────────────────────
+# IMPORTANT: config.yaml contains your API keys
+# NEVER commit it to git!
+config/config.yaml
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Data & Logs
+data/
+*.log
+*.db
+*.db-shm
+*.db-wal
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Generated files
+*.pdf
