@@ -12,7 +12,8 @@ scipy==1.11.4                # Audio processing utilities
 numpy==1.26.2
 
 # ── AI Brain ─────────────────────────────────────────────────────────────────
-openai==1.3.8                # OpenAI API client (GPT-4o)
+openai>=1.95.0
+google-genai>=2.10.0
 
 # ── Text-to-Speech ───────────────────────────────────────────────────────────
 # Option A: macOS built-in (no API key needed, works offline)
