@@ -5,6 +5,7 @@ Records audio from the microphone and converts it to text using Faster-Whisper.
 """
 
 import logging
+import time
 
 import numpy as np
 import sounddevice as sd
@@ -27,11 +28,17 @@ class SpeechToText:
         self.sample_rate = 16000
         self._model = None
 
+        logger.info("Preloading Faster-Whisper model...")
+        self._load_model()
+
+        self._load_model()
+
     def _load_model(self):
         """Load Faster-Whisper model only once."""
 
         if self._model is None:
             logger.info(f"Loading Faster-Whisper '{self.model_name}' model...")
+            logger.info("This happens only once...")
 
             self._model = WhisperModel(
                 self.model_name,
@@ -39,7 +46,7 @@ class SpeechToText:
                 compute_type="int8",
             )
 
-            logger.info("Faster-Whisper model loaded")
+            logger.info("✅ Faster-Whisper ready")
 
         return self._model
 
@@ -50,12 +57,20 @@ class SpeechToText:
 
         logger.info("Listening for command...")
 
+        print("\n🎤 Speak now...\n")
+
+        time.sleep(0.6)
+
+        print("\n🎤 Speak now...\n")
+
+        time.sleep(0.5)
+
         audio_chunks = []
 
-        chunk_duration = 0.5
+        chunk_duration = 1.0
         chunk_samples = int(self.sample_rate * chunk_duration)
 
-        silence_energy_threshold = 0.01
+        silence_energy_threshold = 0.003
         silence_chunks_needed = int(
             self.silence_threshold_ms / (chunk_duration * 1000)
         )
@@ -83,7 +98,7 @@ class SpeechToText:
             if energy < silence_energy_threshold:
                 silence_count += 1
 
-                if silence_count >= silence_chunks_needed and total_chunks >= 2:
+                if silence_count >= silence_chunks_needed and total_chunks >= 3:
                     logger.debug("Silence detected")
                     break
             else:
@@ -105,7 +120,8 @@ class SpeechToText:
             segments, info = model.transcribe(
                 audio,
                 language=self.language,
-                beam_size=5,
+                beam_size=1,
+                vad_filter=True,
             )
 
             text = "".join(segment.text for segment in segments).strip()

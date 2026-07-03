@@ -64,6 +64,20 @@ class MacOSControl:
             "zoom": "Zoom",
             "notion": "Notion",
         }
+        self.website_aliases = {
+            "youtube": "https://youtube.com",
+            "google": "https://google.com",
+            "gmail": "https://mail.google.com",
+            "chatgpt": "https://chat.openai.com",
+            "github": "https://github.com",
+            "linkedin": "https://linkedin.com",
+            "stackoverflow": "https://stackoverflow.com",
+            "instagram": "https://instagram.com",
+            "facebook": "https://facebook.com",
+            "reddit": "https://reddit.com",
+            "netflix": "https://netflix.com",
+            "amazon": "https://amazon.in",
+        }
 
     def handle(self, command: str) -> str:
         """
@@ -137,6 +151,14 @@ class MacOSControl:
     # ────────────────────────────────────────────────────────────────────────
 
     def _handle_open_website(self, command: str) -> str:
+        for site, url in self.website_aliases.items():
+
+            if f"open {site}" in command:
+
+                self._open_url(url)
+
+                return f"Opening {site.title()}."
+        
         """Open a website in the default browser."""
         # "open youtube.com", "go to github.com", "open https://..."
         pattern = r'(?:open|go to|visit|navigate to)\s+((?:https?://)?[\w.-]+\.\w{2,}(?:/\S*)?)'

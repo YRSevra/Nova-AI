@@ -162,17 +162,27 @@ class WakeWordDetector:
                     for segment in segments
                 ).lower().strip()
 
+                print(f"[DEBUG] Heard: '{text}'")
+
                 if not text:
                     continue
 
-                for keyword in self.keywords:
+                wake_words = [
+                    "nova",
+                    "nova.",
+                    "noah",
+                    "noa",
+                    "nora",
+                    "hello nova",
+                    "hello noah",
+                    "hey nova",
+                    "hey noah",
+                ]
 
-                    if keyword.lower() in text:
-                        logger.info(
-                            f"Wake word detected: {text}"
-                        )
-                        self.on_wake()
-                        break
+                if any(word in text for word in wake_words):
+                    logger.info(f"Wake word detected: {text}")
+                    self.on_wake()    
+                    continue
 
         except Exception as e:
 

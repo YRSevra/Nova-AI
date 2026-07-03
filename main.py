@@ -23,6 +23,7 @@ from rich.console import Console
 from rich.panel import Panel
 from core.orchestrator import Orchestrator
 from core.config_loader import load_config
+from core.performance_monitor import PerformanceMonitor
 
 console = Console()
 
@@ -30,6 +31,9 @@ console = Console()
 def main():
     """Start Nova."""
     # ── Print startup banner ──────────────────────────────────────────────
+
+    monitor = PerformanceMonitor()
+
     console.print(Panel.fit(
         "[bold purple]Nova AI Assistant[/bold purple]\n"
         "[dim]Personal macOS AI — Phase 1[/dim]",
@@ -52,6 +56,7 @@ def main():
     # ── Initialize and start Nova ─────────────────────────────────────────
     nova = Orchestrator(config)
     console.print(f"[green]✓[/green] Nova initialized — listening for wake word...")
+    monitor.report()
     console.print(f'[dim]Say "[bold]Hey Nova[/bold]" to wake me up. Press Ctrl+C to quit.[/dim]\n')
 
     try:

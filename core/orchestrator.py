@@ -27,6 +27,7 @@ from core.ai_brain import AIBrain
 from core.voice_output import VoiceOutput
 from core.memory import Memory
 from modules.macos_control import MacOSControl
+from core.voice_engine import VoiceEngine
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -55,11 +56,16 @@ class Orchestrator:
         self.stt = SpeechToText(config)
         console.print("[green]✓[/green] Speech recognition (Whisper)")
 
+        self.voice_engine = VoiceEngine()
+
         self.brain = AIBrain(config)
         console.print("[green]✓[/green] AI Brain (OpenAI)")
 
         self.macos = MacOSControl(config, memory=self.memory)
         console.print("[green]✓[/green] macOS Automation")
+
+        self.follow_up_timeout = 15   # seconds
+        self.follow_up_mode = False
 
         # Wake word detector is initialized last — it needs a callback
         self.wake_detector = WakeWordDetector(config, on_wake_callback=self._on_wake_word)
@@ -103,6 +109,8 @@ class Orchestrator:
         finally:
             self._processing = False
 
+        self.follow_up_mode = True    
+
     def _handle_interaction(self):
         """Full interaction cycle: listen → process → respond."""
 
@@ -114,6 +122,11 @@ class Orchestrator:
         # ── 2. Record and transcribe the command ──────────────────────────
         console.print("[dim]Listening...[/dim]")
         command = self.stt.listen()
+
+        clean_command = self.voice_engine.extract_command(command)
+
+        if clean_command:
+            command = clean_command
 
         if not command or len(command.strip()) < 2:
             console.print("[dim]Nothing heard.[/dim]")
@@ -154,6 +167,44 @@ class Orchestrator:
         console.print(f"[purple]Nova:[/purple] {response}")
         self.memory.save_message("assistant", response)
         self.voice.speak(response)
+
+        # ── Keep listening for follow-up commands ─────────────────────
+
+        while True:
+
+            console.print("\n[green]Nova:[/green] Anything else?")
+
+            follow_command = self.stt.listen()
+
+            if not follow_command or len(follow_command.strip()) < 2:
+                console.print("[dim]Conversation ended.[/dim]")
+                break
+
+            console.print(f"[cyan]You:[/cyan] {follow_command}")
+
+            self.memory.save_message("user", follow_command)
+
+            macos_response = self.macos.handle(follow_command)
+
+            if macos_response:
+
+                console.print(f"[purple]Nova:[/purple] {macos_response}")
+
+                self.memory.save_message("assistant", macos_response)
+
+                self.voice.speak(macos_response)
+
+                continue
+
+            console.print("[dim]Thinking...[/dim]")
+
+            response = self.brain.think(follow_command)
+
+            console.print(f"[purple]Nova:[/purple] {response}")
+
+            self.memory.save_message("assistant", response)
+
+            self.voice.speak(response)
 
     def _play_activation_sound(self):
         """Play a small sound to confirm Nova heard the wake word."""
