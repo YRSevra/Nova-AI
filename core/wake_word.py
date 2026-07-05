@@ -100,9 +100,9 @@ class WakeWordDetector:
 
                 keyword = porcupine.process(pcm)
 
-                if keyword >= 0:
-                    logger.info("Wake word detected!")
-                    self.on_wake()
+            if keyword >= 0:
+                logger.info("Wake word detected!")
+                self.on_wake("")    
 
         except ImportError:
             logger.warning(
@@ -168,20 +168,37 @@ class WakeWordDetector:
                     continue
 
                 wake_words = [
+                    "hello nova",
+                    "hey nova",
+                    "hello noah",
+                    "hey noah",
                     "nova",
-                    "nova.",
                     "noah",
                     "noa",
                     "nora",
-                    "hello nova",
-                    "hello noah",
-                    "hey nova",
-                    "hey noah",
                 ]
 
-                if any(word in text for word in wake_words):
-                    logger.info(f"Wake word detected: {text}")
-                    self.on_wake()    
+                command = text
+
+                for wake in wake_words:
+                    command = command.replace(wake, "")
+
+                command = command.strip(" ,.!?")
+
+                logger.info(f"Wake word detected: {text}")
+
+                if command:
+                    self.on_wake(command)
+                else:
+                    self.on_wake("")
+
+                    for wake in wake_words:
+                        command = command.replace(wake, "")
+
+                    command = command.strip(" ,.!?")
+
+                    self.on_wake(command)
+
                     continue
 
         except Exception as e:

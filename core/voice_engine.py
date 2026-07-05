@@ -1,12 +1,5 @@
 """
-Nova Voice Engine V2
-
-Always listens.
-
-Returns:
-None
-or
-command after wake word
+Nova Voice Engine V3
 """
 
 import re
@@ -16,29 +9,58 @@ class VoiceEngine:
 
     def __init__(self):
 
-        self.wake_words = [
-            "hello nova",
-            "hey nova",
-            "nova",
-            "hello noah",
-            "hey noah",
-            "noah",
-            "noa",
-            "nora",
+        self.wake_patterns = [
+
+            r"^(hello|hey)\s+nova[s]?\b",
+            r"^(hello|hey)\s+noah\b",
+            r"^(hello|hey)\s+noa\b",
+            r"^(hello|hey)\s+nora\b",
+
+            r"^nova[s]?\b",
+            r"^noah\b",
+            r"^noa\b",
+            r"^nora\b",
         ]
+
+        self.filler_words = {
+            "please",
+            "can",
+            "could",
+            "you",
+            "would",
+            "just",
+            "kindly",
+        }
 
     def extract_command(self, text: str):
 
+        if not text:
+            return None
+
         text = text.lower().strip()
 
-        for wake in self.wake_words:
+        text = re.sub(r"[,.!?]", "", text)
 
-            if wake in text:
+        # Remove wake word
+        for pattern in self.wake_patterns:
 
-                command = text.replace(wake, "").strip()
+            new_text = re.sub(pattern, "", text).strip()
 
-                command = re.sub(r"\s+", " ", command)
+            if new_text != text:
+                text = new_text
+                break
 
-                return command
+        if not text:
+            return None
 
-        return None
+        words = text.split()
+
+        while words and words[0] in self.filler_words:
+            words.pop(0)
+
+        command = " ".join(words).strip()
+
+        if command == "":
+            return None
+
+        return command

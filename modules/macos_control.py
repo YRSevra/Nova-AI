@@ -63,6 +63,16 @@ class MacOSControl:
             "discord": "Discord",
             "zoom": "Zoom",
             "notion": "Notion",
+            "code": "Visual Studio Code",
+            "visual studio": "Visual Studio Code",
+            "telegram": "Telegram",
+            "chatgpt": "ChatGPT",
+            "arc": "Arc",
+            "brave": "Brave Browser",
+            "edge": "Microsoft Edge",
+            "system settings": "System Settings",
+            "settings": "System Settings",
+            "preferences": "System Settings",
         }
         self.website_aliases = {
             "youtube": "https://youtube.com",

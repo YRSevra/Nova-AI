@@ -28,6 +28,7 @@ from core.voice_output import VoiceOutput
 from core.memory import Memory
 from modules.macos_control import MacOSControl
 from core.voice_engine import VoiceEngine
+from tools.router import ToolRouter
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -64,6 +65,8 @@ class Orchestrator:
         self.macos = MacOSControl(config, memory=self.memory)
         console.print("[green]✓[/green] macOS Automation")
 
+        self.router = ToolRouter(self.macos)
+
         self.follow_up_timeout = 15   # seconds
         self.follow_up_mode = False
 
@@ -98,20 +101,20 @@ class Orchestrator:
         except KeyboardInterrupt:
             pass
 
-    def _on_wake_word(self):
-        """Called when the wake word is detected."""
+    def _on_wake_word(self, wake_command=""):
+
         if self._processing:
-            return  # Ignore if already handling a command
+            return
 
         self._processing = True
+
         try:
-            self._handle_interaction()
+            self._handle_interaction(wake_command)
+
         finally:
-            self._processing = False
+            self._processing = False 
 
-        self.follow_up_mode = True    
-
-    def _handle_interaction(self):
+    def _handle_interaction(self, wake_command=""):
         """Full interaction cycle: listen → process → respond."""
 
         # ── 1. Signal that we heard the wake word ─────────────────────────
@@ -120,21 +123,55 @@ class Orchestrator:
         self._play_activation_sound()
 
         # ── 2. Record and transcribe the command ──────────────────────────
-        console.print("[dim]Listening...[/dim]")
-        command = self.stt.listen()
 
-        clean_command = self.voice_engine.extract_command(command)
+        if wake_command:
 
-        if clean_command:
-            command = clean_command
+            command = wake_command.strip()
 
-        if not command or len(command.strip()) < 2:
-            console.print("[dim]Nothing heard.[/dim]")
+        else:
+
+            console.print("[dim]Listening...[/dim]")
+
+            command = self.stt.listen()
+
+            if not command or len(command.strip()) < 2:
+                console.print("[dim]Nothing heard.[/dim]")
+                return
+
+        # Clean command
+
+        clean = self.voice_engine.extract_command(command)
+
+        if clean:
+            command = clean
+
+        if not command:
+            console.print("[dim]No valid command detected.[/dim]")
+            return
+
+        cmd = command.lower().strip()
+
+        if cmd in [
+            "stop",
+            "nova stop",
+            "stop nova",
+            "quiet",
+            "be quiet",
+            "silence"
+        ]:
+
+            self.voice.stop()
             return
 
         console.print(f"[cyan]You:[/cyan] {command}")
 
+        # Empty command after cleaning?
+        if not command or len(command.strip()) < 2:
+            console.print("[dim]No valid command detected.[/dim]")
+            return
+
         # ── 3. Save the command to memory ─────────────────────────────────
+
         self.memory.save_message("user", command)
 
         # ── 4. Try macOS automation first ─────────────────────────────────
@@ -175,6 +212,37 @@ class Orchestrator:
             console.print("\n[green]Nova:[/green] Anything else?")
 
             follow_command = self.stt.listen()
+            clean = self.voice_engine.extract_command(follow_command)
+
+            if clean:
+                follow_command = clean
+
+            if not follow_command:
+                break
+
+            follow_command = follow_command.strip()
+
+            if follow_command:
+
+                cmd = follow_command.lower().strip()
+
+                if cmd in [
+                    "stop",
+                    "nova stop",
+                    "stop nova",
+                    "quiet",
+                    "be quiet",
+                    "silence"
+                ]:
+
+                    self.voice.stop()
+
+                    console.print("[yellow]Speech stopped.[/yellow]")
+
+                    continue
+
+            if not follow_command:
+                break
 
             if not follow_command or len(follow_command.strip()) < 2:
                 console.print("[dim]Conversation ended.[/dim]")

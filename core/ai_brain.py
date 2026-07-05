@@ -86,12 +86,12 @@ class AIBrain:
             )
         
     def think(self, user_message: str) -> str:
-        """Generate an AI response."""
+        """Generate AI response with automatic fallback."""
 
         self.conversation_history.append(
             {
                 "role": "user",
-                "content": user_message
+                "content": user_message,
             }
         )
 
@@ -100,18 +100,46 @@ class AIBrain:
                 self.conversation_history[-self.max_context * 2:]
             )
 
-        try:
+        # ---------- Gemini ----------
+        if self.provider == "gemini":
 
-            if self.provider == "gemini":
+            try:
                 return self._think_gemini(user_message)
 
+            except Exception as e:
+
+                logger.warning(f"Gemini failed: {e}")
+
+                # Automatically fallback
+                try:
+
+                    logger.info("Switching to OpenAI...")
+
+                    self.provider = "openai"
+
+                    self._initialize_provider()
+
+                    return self._think_openai()
+
+                except Exception as e2:
+
+                    logger.exception("Fallback failed")
+
+                    return (
+                        "Sorry, my AI services are temporarily unavailable."
+                    )
+
+        # ---------- OpenAI ----------
+        try:
             return self._think_openai()
 
         except Exception as e:
 
-            logger.exception("AI Error")
+            logger.exception("OpenAI Error")
 
-            return f"Error: {e}"
+            return (
+                "Sorry, I'm having trouble connecting to my AI brain."
+            )
         
     def _think_gemini(self, prompt: str) -> str:
         """Generate response using Gemini."""

@@ -42,6 +42,7 @@ class VoiceOutput:
         self.elevenlabs_api_key = voice_cfg.get("elevenlabs_api_key", "")
         self.elevenlabs_voice_id = voice_cfg.get("elevenlabs_voice_id", "")
         self._speaking = False
+        self._process = None
 
     def speak(self, text: str, block: bool = True):
         """
@@ -84,21 +85,25 @@ class VoiceOutput:
     # ────────────────────────────────────────────────────────────────────────
 
     def _speak_macos(self, text: str):
-        """
-        Use macOS `say` command for TTS.
-        
-        The `say` command is built into every Mac.
-        Example: say -v Samantha -r 175 "Hello, I am Nova"
-        """
+
         cmd = [
             "say",
             "-v", self.macos_voice,
             "-r", str(self.macos_rate),
             text
         ]
-        logger.debug(f"Speaking (macOS TTS): {text[:60]}...")
-        subprocess.run(cmd, capture_output=True)
 
+        logger.debug(f"Speaking: {text}")
+
+        self._process = subprocess.Popen(
+            cmd,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+
+        self._process.wait()
+
+        self._process = None
     # ────────────────────────────────────────────────────────────────────────
     # ElevenLabs TTS (higher quality)
     # ────────────────────────────────────────────────────────────────────────
@@ -170,3 +175,15 @@ class VoiceOutput:
     @property
     def is_speaking(self) -> bool:
         return self._speaking
+    def stop(self):
+        """Immediately stop speaking."""
+
+        if self._process:
+
+            try:
+                self._process.terminate()
+            except Exception:
+                pass
+
+            self._process = None
+            self._speaking = False
