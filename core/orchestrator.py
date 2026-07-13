@@ -29,6 +29,7 @@ from core.memory import Memory
 from modules.macos_control import MacOSControl
 from core.voice_engine import VoiceEngine
 from tools.router import ToolRouter
+from core.intent_engine import IntentEngine
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -58,6 +59,9 @@ class Orchestrator:
         console.print("[green]✓[/green] Speech recognition (Whisper)")
 
         self.voice_engine = VoiceEngine()
+
+        self.intent_engine = IntentEngine()
+        console.print("[green]✓[/green] Intent Engine")
 
         self.brain = AIBrain(config)
         console.print("[green]✓[/green] AI Brain (OpenAI)")
@@ -174,16 +178,36 @@ class Orchestrator:
 
         self.memory.save_message("user", command)
 
-        # ── 4. Try macOS automation first ─────────────────────────────────
-        # Some commands (open app, search, etc.) don't need AI
-        macos_response = self.macos.handle(command)
+        # ── 4. Detect command intent ──────────────────────────────────────
 
-        if macos_response:
-            # It was a macOS command — speak the confirmation
-            console.print(f"[purple]Nova:[/purple] {macos_response}")
-            self.memory.save_message("assistant", macos_response)
+        intent = self.intent_engine.detect(command)
+
+        console.print(f"[dim]Intent: {intent}[/dim]")
+
+        # ── 5. Route automation commands ──────────────────────────────────
+
+        if intent == "automation":
+
+            macos_response = self.macos.handle(command)
+
+            if macos_response:
+
+                console.print(
+                    f"[purple]Nova:[/purple] {macos_response}"
+            )
+
+            self.memory.save_message(
+                "assistant",
+                macos_response
+            )
+
             self.voice.speak(macos_response)
+
             return
+
+        logger.warning(
+            f"Automation command not handled: {command}"
+        )
 
         # ── 5. Ask the AI Brain ───────────────────────────────────────────
         # Load recent conversation context from memory
